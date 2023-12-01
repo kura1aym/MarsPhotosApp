@@ -26,7 +26,7 @@ import java.io.IOException
 
 class MarsViewModel : ViewModel() {
     /** The mutable State that stores the status of the most recent request */
-    var marsUiState: String by mutableStateOf("")
+    var marsUiState: MarsUiState by mutableStateOf(MarsUiState.Loading)
         private set
 
     /**
@@ -40,14 +40,20 @@ class MarsViewModel : ViewModel() {
      * Gets Mars photos information from the Mars API Retrofit service and updates the
      * [MarsPhoto] [List] [MutableList].
      */
-    fun getMarsPhotos() {
+    private fun getMarsPhotos() {
         viewModelScope.launch {
-            try {
+            marsUiState = try {
                 val listResult = MarsApi.retrofitService.getPhotos()
-                marsUiState = listResult
+                MarsUiState.Success(listResult)
             } catch (e: IOException) {
-
+                MarsUiState.Error
             }
         }
+    }
+
+    sealed interface MarsUiState {
+        data class Success(val photos: String) : MarsUiState
+        object Error : MarsUiState
+        object Loading : MarsUiState
     }
 }
